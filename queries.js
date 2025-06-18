@@ -1,142 +1,224 @@
-// queries.js
-// Заявки към MongoDB за четене, актуализация, изтриване и агрегации
+// Избор на база данни
+use onlineCoursesDB
 
-use bookstore;
+// ------------------------- USERS -------------------------
 
-// 📘 BOOKS
-
-// Извличане на всички книги
-db.books.find();
-
-// Филтриране по жанр
-db.books.find({ genre: "Dystopian" });
-
-// Филтриране по жанр и цена под 12
-db.books.find({ genre: "Classic", price: { $lt: 12 } });
-
-// Актуализация на книга по заглавие - увеличаване на наличност
-db.books.updateOne(
-  { title: "1984" },
-  { $inc: { stock: 5 } }
-);
-
-// Изтриване на книга по автор
-db.books.deleteOne({ author: "Herman Melville" });
-
-// Агрегиране: групиране по жанр и средна цена
-db.books.aggregate([
-  {
-    $group: {
-      _id: "$genre",
-      averagePrice: { $avg: "$price" },
-      totalStock: { $sum: "$stock" }
-    }
-  },
-  { $sort: { averagePrice: -1 } }
-]);
-
-// 👥 CUSTOMERS
-
-// Всички клиенти
-db.customers.find();
+// Извличане на всички потребители
+// Read all
+db.users.find()
 
 // Филтриране по град
-db.customers.find({ "address.city": "Sofia" });
+db.users.find({ "address.city": "Sofia" })
 
-// Филтриране по жанр в любимите
-db.customers.find({ favoriteGenres: "Dystopian" });
+// Филтриране по възраст и интерес
+db.users.find({ age: { $gt: 25 }, interests: "programming" })
 
-// Актуализация на телефон по имейл
-db.customers.updateOne(
+// Актуализиране: Промяна на email на конкретен потребител
+db.users.updateOne(
   { email: "ivan@example.com" },
-  { $set: { phone: "0888999111" } }
-);
+  { $set: { email: "ivan.petrov@example.com" } }
+)
 
-// Изтриване по имейл
-db.customers.deleteOne({ email: "georgi@example.com" });
+// Изтриване: Премахване на потребител от Ruse
+db.users.deleteOne({ "address.city": "Ruse" })
 
-// Агригация: групиране на клиенти по град
-db.customers.aggregate([
-  {
-    $group: {
-      _id: "$address.city",
-      count: { $sum: 1 }
-    }
-  },
-  { $sort: { count: -1 } }
-]);
+// Агрегации:
 
-// 📂 CATEGORIES
+// Групиране по град с броене
+db.users.aggregate([
+  { $group: { _id: "$address.city", totalUsers: { $sum: 1 } } }
+])
 
-// Всички категории
-db.categories.find();
+// Средна възраст на потребителите по интерес "programming"
+db.users.aggregate([
+  { $match: { interests: "programming" } },
+  { $group: { _id: null, avgAge: { $avg: "$age" } } }
+])
+
+// Сортиране по възраст
+db.users.aggregate([
+  { $sort: { age: -1 } }
+])
+
+// ------------------------- COURSES -------------------------
+
+// Всички курсове
+db.courses.find()
+
+// Курсове по категория "Programming"
+db.courses.find({ category: "Programming" })
+
+// Курсове с цена под 60 и ниво "Beginner"
+db.courses.find({ price: { $lt: 60 }, level: "Beginner" })
+
+// Update: промяна на цена на курс
+db.courses.updateOne(
+  { title: "JavaScript Basics" },
+  { $set: { price: 44.99 } }
+)
+
+// Delete: изтриване на курс
+db.courses.deleteOne({ title: "Cooking Like a Pro" })
+
+// Агрегации:
+
+// Брой курсове по категория
+db.courses.aggregate([
+  { $group: { _id: "$category", totalCourses: { $sum: 1 } } }
+])
+
+// Средна цена по ниво
+db.courses.aggregate([
+  { $group: { _id: "$level", avgPrice: { $avg: "$price" } } }
+])
+
+// Сортиране по цена
+db.courses.aggregate([
+  { $sort: { price: -1 } }
+])
+
+// ------------------------- INSTRUCTORS -------------------------
+
+// Всички инструктори
+db.instructors.find()
 
 // Филтриране по име
-db.categories.find({ name: "Fantasy" });
+db.instructors.find({ name: /Petrov/ })
 
-// Актуализация на описание
-db.categories.updateOne(
-  { name: "Horror" },
-  { $set: { description: "Horror books and terrifying tales" } }
-);
+// Инструктори с повече от 0 курсове (ако има update за courseIds)
+db.instructors.find({ courseIds: { $exists: true, $not: { $size: 0 } } })
 
-// Изтриване на категория
-db.categories.deleteOne({ name: "Historical" });
+// Update: добавяне на courseId в courseIds
+db.instructors.updateOne(
+  { name: "Stefan Markov" },
+  { $set: { courseIds: [ObjectId("65faabcde000000000000001")] } }
+)
 
-// Агригация: просто броене на всички категории
-db.categories.aggregate([
+// Delete: премахване на инструктор
+db.instructors.deleteOne({ name: "Petar Petrov" })
+
+// Агрегации:
+
+// Групиране по брой курсове
+db.instructors.aggregate([
+  {
+    $project: {
+      name: 1,
+      numberOfCourses: { $size: "$courseIds" }
+    }
+  },
   {
     $group: {
       _id: null,
-      totalCategories: { $sum: 1 }
+      avgCourses: { $avg: "$numberOfCourses" }
     }
   }
-]);
+])
 
-// 🧾 ДОПЪЛНИТЕЛНИ: примерни колекции orders и reviews
+// Сортиране по име
+db.instructors.aggregate([
+  { $sort: { name: 1 } }
+])
 
-// Колекция: orders
-db.orders.insertMany([
+// Броене на инструктори с повече от 1 курс
+db.instructors.aggregate([
   {
-    customerId: ObjectId("664a8f9b7c0c3d8999c14e01"),
-    items: [
-      { bookId: ObjectId("664a8cba7c0c3d8999c14e11"), quantity: 2 },
-      { bookId: ObjectId("664a8cba7c0c3d8999c14e13"), quantity: 1 }
-    ],
-    total: 32.97,
-    orderDate: new Date("2025-06-01T10:00:00Z")
+    $project: {
+      name: 1,
+      numCourses: { $size: "$courseIds" }
+    }
+  },
+  {
+    $match: { numCourses: { $gt: 1 } }
+  },
+  {
+    $count: "InstructorsWithMultipleCourses"
   }
-]);
+])
 
-// Агригация: обща сума на поръчките
-db.orders.aggregate([
+// ------------------------- ENROLLMENTS -------------------------
+
+// Всички записвания
+db.enrollments.find()
+
+// Филтриране по статус
+db.enrollments.find({ status: "completed" })
+
+// По дата и статус
+db.enrollments.find({
+  date: { $gte: ISODate("2023-01-01") },
+  status: "active"
+})
+
+// Update: промяна на статус
+db.enrollments.updateOne(
+  { status: "active" },
+  { $set: { status: "completed" } }
+)
+
+// Delete: изтриване на записване
+db.enrollments.deleteOne({ status: "completed" })
+
+// Агрегации:
+
+// Групиране по статус
+db.enrollments.aggregate([
+  { $group: { _id: "$status", count: { $sum: 1 } } }
+])
+
+// Брой записвания по месец
+db.enrollments.aggregate([
   {
     $group: {
-      _id: null,
-      totalRevenue: { $sum: "$total" },
-      totalOrders: { $sum: 1 }
+      _id: { $month: "$date" },
+      total: { $sum: 1 }
     }
   }
-]);
+])
 
-// Колекция: reviews
-db.reviews.insertMany([
-  {
-    bookId: ObjectId("664a8cba7c0c3d8999c14e11"),
-    reviewer: "Ivan Petrov",
-    rating: 5,
-    comment: "Прекрасна книга!",
-    date: new Date("2025-06-10")
-  }
-]);
+// Сортиране по дата
+db.enrollments.aggregate([
+  { $sort: { date: -1 } }
+])
 
-// Агригация: средна оценка по книга
+// ------------------------- REVIEWS -------------------------
+
+// Всички ревюта
+db.reviews.find()
+
+// Ревюта с оценка >= 4
+db.reviews.find({ rating: { $gte: 4 } })
+
+// Ревюта за конкретен курс
+db.reviews.find({ courseId: ObjectId("65faabcde000000000000001") })
+
+// Update: промяна на коментар
+db.reviews.updateOne(
+  { comment: "Not bad" },
+  { $set: { comment: "Pretty good actually" } }
+)
+
+// Delete: изтриване на слабо ревю
+db.reviews.deleteOne({ rating: 1 })
+
+// Агрегации:
+
+// Средна оценка по курс
 db.reviews.aggregate([
   {
     $group: {
-      _id: "$bookId",
-      avgRating: { $avg: "$rating" },
-      count: { $sum: 1 }
+      _id: "$courseId",
+      avgRating: { $avg: "$rating" }
     }
   }
-]);
+])
+
+// Групиране на брой ревюта по оценка
+db.reviews.aggregate([
+  { $group: { _id: "$rating", total: { $sum: 1 } } }
+])
+
+// Сортиране по дата на ревю
+db.reviews.aggregate([
+  { $sort: { date: -1 } }
+])
