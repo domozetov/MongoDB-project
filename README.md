@@ -1,15 +1,25 @@
-# MongoDB-project
+#  OnlineCoursesDB – MongoDB проект
 
-#  Bookstore MongoDB Project
+##  Общо описание
 
-Този проект представя MongoDB база данни за **онлайн книжарница**, включваща колекции за книги, клиенти, категории, поръчки и отзиви. Проектът демонстрира пълните CRUD операции, както и използване на **aggregate pipeline** за обработка и анализ на данни.
+Този проект представлява MongoDB база данни за онлайн образователна платформа, наречена **OnlineCoursesDB**. Платформата управлява информация за потребители, курсове, инструктори, записвания и ревюта. Системата позволява CRUD операции и използва множество `aggregate` pipeline заявки за извличане на аналитични данни.
 
-## Съдържание на проекта
+Проектът е създаден като част от учебна задача и включва:
 
-bookstore-project
-├── insert.js # Всички INSERT (добавяне) заявки
-├── queries.js # Всички останали заявки (Read, Update, Delete, Aggregate)
-└── README.md # Описание на базата данни и инструкции за стартиране
+- 5 колекции
+- Поне 10 документа във всяка
+- CRUD операции (create, read, update, delete)
+- Множество агрегиращи заявки (групиране, сумиране, броене, филтриране, сортиране)
+- Файлова структура подходяща за GitHub
+
+---
+
+## Структура на проекта
+
+OnlineCoursesDB
+├── insert.js # Всички заявки за вмъкване на данни с коментари
+├── queries.js # Всички CRUD и агрегиращи заявки с коментари
+└── README.md # Това описание
 
 yaml
 Copy
@@ -17,161 +27,135 @@ Edit
 
 ---
 
-## Описание на базата данни
+## Колекции и структура на документите
 
-**Име на базата данни:** `bookstore`
+### 1. `users`
 
-Тя съдържа пет основни колекции:
+Съдържа информация за потребители на платформата.
 
-### 1. `books`
-Съдържа информация за книгите, налични в книжарницата.
+Примерен документ:
 
-**Примерна структура на документ:**
-```json
-{
-  "title": "1984",
-  "author": "George Orwell",
-  "genre": "Dystopian",
-  "price": 12.99,
-  "stock": 12,
-  "tags": ["classic", "totalitarianism"],
-  "details": {
-    "publisher": "Secker & Warburg",
-    "year": 1949
-  }
-}
-2. customers
-Съдържа информация за клиентите на магазина.
-
-Примерна структура:
-
-json
-Copy
-Edit
 {
   "name": "Ivan Petrov",
   "email": "ivan@example.com",
-  "phone": "0888123456",
-  "favoriteGenres": ["Fantasy", "Sci-Fi"],
+  "age": 28,
+  "interests": ["programming", "math"],
   "address": {
     "city": "Sofia",
-    "street": "Bulgaria Blvd. 15"
+    "street": "Bulgaria Blvd. 101"
   }
 }
-3.  categories
-Съдържа жанрове/категории за книги.
+2. courses
+Съдържа всички онлайн курсове.
 
-Примерна структура:
+Примерен документ:
 
 json
 Copy
 Edit
 {
-  "name": "Fantasy",
-  "description": "Books with magical worlds and epic adventures"
+  "title": "JavaScript Basics",
+  "category": "Programming",
+  "price": 49.99,
+  "level": "Beginner",
+  "createdAt": ISODate("2023-10-01")
 }
-4. orders
-Съдържа информация за направени поръчки от клиенти.
+3. instructors
+Информация за преподаватели и курсовете, които водят.
 
-Примерна структура:
+Примерен документ:
 
 json
 Copy
 Edit
 {
-  "customerId": ObjectId(...),
-  "items": [
-    { "bookId": ObjectId(...), "quantity": 2 }
-  ],
-  "total": 25.98,
-  "orderDate": ISODate("2025-06-01T10:00:00Z")
+  "name": "Stefan Markov",
+  "bio": "Software engineer with 10 years of experience.",
+  "courseIds": [
+    ObjectId("65faabcde000000000000001"),
+    ObjectId("65faabcde000000000000002")
+  ]
 }
-5.  reviews
-Отзиви на клиенти за книги.
+4. enrollments
+Записвания на потребители за курсове.
 
-Примерна структура:
+Примерен документ:
 
 json
 Copy
 Edit
 {
-  "bookId": ObjectId(...),
-  "reviewer": "Maria Ivanova",
+  "userId": ObjectId("65faabcde000000000000010"),
+  "courseId": ObjectId("65faabcde000000000000001"),
+  "date": ISODate("2024-02-15"),
+  "status": "completed"
+}
+5. reviews
+Мнения и оценки за курсове.
+
+Примерен документ:
+
+json
+Copy
+Edit
+{
+  "courseId": ObjectId("65faabcde000000000000001"),
+  "userId": ObjectId("65faabcde000000000000010"),
   "rating": 5,
-  "comment": "Страхотна книга!",
-  "date": ISODate("2025-06-10")
+  "comment": "Excellent course!",
+  "date": ISODate("2024-03-01")
 }
-⚙️ Инструкции за използване
-1. Инсталиране на MongoDB (ако още не е инсталиран)
-Изтегли MongoDB от: https://www.mongodb.com/try/download/community
+ Инсталация и използване
+Изисквания:
 
-Инсталирай го и стартирай сървъра с командата:
+MongoDB инсталиран и стартиран локално или в облак (напр. MongoDB Atlas)
 
-bash
-Copy
-Edit
-mongod
-2. Стартиране на MongoDB Shell
-bash
-Copy
-Edit
-mongo
-3. Изпълнение на insert.js
-От MongoDB shell зареди:
+Mongo Shell или MongoDB Compass
+
+Git (по избор)
+
+Клониране на проекта:
 
 bash
 Copy
 Edit
-load("insert.js")
-4. Изпълнение на queries.js
-След това изпълни:
+git clone https://github.com/your-username/OnlineCoursesDB.git
+cd OnlineCoursesDB
+Импортиране на данни:
+Отворете insert.js във вашата Mongo Shell или MongoDB Compass и изпълнете всички заявки, за да вмъкнете примерните данни.
 
-bash
+Изпълнение на заявки:
+Заредете queries.js, за да извършите CRUD операциите и всички агрегиращи заявки.
+
+ Агрегиращи операции
+Проектът включва множество заявки от тип aggregate pipeline за всяка колекция, включително:
+
+Групиране по категории, статуси, градове и др.
+
+Сумиране на стойности като брой потребители, курсове, записвания и ревюта.
+
+Средни стойности, напр. средна оценка или средна възраст.
+
+Филтриране и сортиране по дата, цена, име и др.
+
+Пример:
+
+js
 Copy
 Edit
-load("queries.js")
- Какво съдържа проектът (по условие)
- Създаване (Create)
-Всяка колекция съдържа поне 10 документа.
+// Средна цена на курсовете по ниво
+db.courses.aggregate([
+  { $group: { _id: "$level", avgPrice: { $avg: "$price" } } }
+])
+ Какво покрива проектът
+Условие	Изпълнено
+5 Колекции	
+≥10 документа на колекция	
+Разнообразие от типове данни	
+CRUD операции за всяка колекция	
+Агрегиране: групиране	
+Агрегиране: сумиране/средно/броене	
+Агрегиране: филтриране и сортиране	
+Коментари преди всяка заявка	
+README.md описание	
 
-Документите съдържат различни типове данни – прости типове, масиви и вградени обекти.
-
- Четене (Read)
-Заявки за:
-
-Извличане на всички документи.
-
-Филтриране по едно и по няколко полета.
-
- Актуализация (Update)
-Поне една заявка за актуализация във всяка колекция – чрез $set и $inc.
-
- Изтриване (Delete)
-Поне една заявка за изтриване на документ от всяка колекция.
-
- Агрегиране (Aggregate)
-Използване на aggregate() за:
-
-Групиране по поле ($group)
-
-Сумиране, броене или средни стойности ($sum, $avg)
-
-Филтриране и сортиране ($match, $sort)
-
-Примерни технологии
-MongoDB Community Server
-
-Mongo Shell (mongosh или mongo)
-
-Visual Studio Code или друг редактор
-
-Автор
-Проектът е създаден с учебна цел като част от задание по бази данни.
-
-yaml
-Copy
-Edit
-
----
-
-Готово за поставяне в GitHub! Ако искаш, мога да ти помогна и с `.gitignore` или описание на комитит
